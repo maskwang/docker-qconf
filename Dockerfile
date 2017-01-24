@@ -19,17 +19,22 @@ RUN /usr/sbin/enable_insecure_key
 CMD ["/sbin/my_init"]
 
 # Replace APT Source
-ADD build/sources.list /tmp/sources.list
-RUN mv /tmp/sources.list /etc/apt/sources.list
+#ADD build/sources.list /etc/apt/sources.list
 
-# Nginx-PHP Installation
-RUN apt-get update
+RUN apt-get update --fix-missing
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y vim curl wget build-essential python-software-properties\
  cmake telnet nmap
 
-RUN wget https://github.com/Qihoo360/QConf/archive/1.2.0.tar.gz && \
-	tar zxvf  QConf-1.2.0.tar.gz && \
+ADD build/QConf-1.2.0.tar.gz /tmp/
+RUN cd /tmp/ && \
 	cd QConf-1.2.0 && \
 	mkdir build && cd build && \
-	cmake .. && make && make install && \
-	cd /usr/local/qconf/./bin/ && bash agent-cmd.sh start
+	cmake .. && make && make install
+
+RUN mkdir -p        /etc/service/qconf
+ADD build/qconf.sh /etc/service/qconf/run
+RUN chmod +x        /etc/service/qconf/run
+
+#EXPOSE 80
+
+#RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
